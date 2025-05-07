@@ -52,10 +52,6 @@ BANNED_TOKENS = [
     ]
 assert BANNED_TOKENS[0] == 'sorry'  # The first banned token should be `sorry` (required by `agent/solution_search.py`)
 
-BANNED_TOKENS_IN_ANSWER_TYPE = [
-    'String' # Don't allow strings
-]
-
 DEFAULT_CORE_OPTIONS = ["maxHeartbeats=0", "maxRecDepth=100000"]
 CORE_OPTIONS = DEFAULT_CORE_OPTIONS + ["tactic.hygienic=false"] + ['pp.fullNames=true', 'pp.funBinderTypes=true', 'pp.piBinderTypes=true']
 PARSING_EXTRA_OPTIONS = ['pp.numericTypes=true', 'pp.structureInstances=false', 'pp.safeShadowing=false', 'pp.fieldNotation.generalized=false', 'pp.explicit=true', 'pp.deepTerms=true', 'pp.proofs=true', f'pp.maxSteps={REPL_MAXREAD}', 'pp.notation=false']
@@ -72,5 +68,3 @@ ANSWER_PATTERN = re.compile(r"\\boxed{(.*?)}")
 CODEBLOCK_PATTERN = re.compile(r'```(?:.*?)\n(.*?)```', flags=re.DOTALL)
 
 RPE_TACTICS = ['rfl', 'norm_num', 'ring_nf', 'rw_search', 'aesop']
-
-SYSTEM_PROMPT_SFT = 'You are a Lean 4 expert.'

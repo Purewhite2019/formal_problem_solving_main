@@ -325,10 +325,8 @@ class ProofSearchState:
 class ProofSearchResult:
     duration: float
     success: bool
-    proof: List[Tuple[int, Tactic]] = field(default_factory=list) # List of tactics (and additional information, e.g. proofs of `have`s) in the proof
+    proof: List[Tuple[int, Tactic]] = field(default_factory=list)
     final_state: Optional[GoalState] = None
-        # Since sometimes we ignore some tailing goals and focus on the main goals,
-        # After solving all of them, the ignored goals should be in `final_state`.
     states: List[GoalState] = field(default_factory=list)
 
     def serialize(self) -> Dict:

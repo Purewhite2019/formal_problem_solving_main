@@ -30,8 +30,6 @@ from common.pantograph.dataclasses import (
     TacticInvocation,
 )
 
-# timeit = lambda x : x   # Comment out to enable timing
-
 def _get_proc_cwd():
     return Path(__file__).parent
 def _get_proc_path():

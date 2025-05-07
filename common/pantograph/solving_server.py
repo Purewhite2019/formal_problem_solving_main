@@ -65,7 +65,6 @@ class BaseSolvingServer:
 
 # Answer as Term
 class TermSolvingServer(BaseSolvingServer):
-    # Load from a Datapoint or statement, and initialize the proving environment, returning current proof state
     async def init_solving_state_async(self, sample: Optional[FormalProblem]=None) -> Tuple[GoalState, List[str]]:
         await self.load_problem_async(sample)
         tac_history = []
@@ -119,7 +118,6 @@ class TermSolvingServer(BaseSolvingServer):
 
 # Answer as Prop
 class PropSolvingServer(BaseSolvingServer):
-    # Load from a Datapoint or statement, returning current solution state and solution goals to ignore
     async def init_solving_state_async(self, sample: Optional[FormalProblem]=None) -> GoalState:
         await self.load_problem_async(sample)
         
