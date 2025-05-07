@@ -2,9 +2,9 @@
 
 This repository is the official implementation of _Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving_. 
 
-Our research focuses:
+Our research focuses on:
 1. What is problem-solving?
-2. Beyond proving known targets, how to conduct process-verified problem-solving inside existing formal theorem proving (FTP) environments?
+2. Beyond proving known targets, how can process-verified problem-solving be conducted inside existing formal theorem proving (FTP) environments?
 
 ## Abstract
 As a seemingly self-explanatory task, _problem-solving_ has been a significant component of science and engineering. However, a general yet concrete formulation of problem-solving itself is missing. With the recent development of AI-based problem-solving agents, the demand for process-level verifiability is rapidly increasing yet underexplored.
@@ -13,9 +13,7 @@ We construct three benchmarks on problem-solving: **FormalMath500**, a formaliza
 For faithful, interpretable, and human-aligned evaluation, we propose **RPE** (_**R**estricted **P**ropositional **E**quivalence_), a symbolic approach to determine the _correctness_ of answers by formal verification.
 We evaluate four prevalent FTP models and two prompting methods as baselines, solving at most 23.77% of FormalMath500, 27.47% of MiniF2F-Solving, and 0.31% of PutnamBench-Solving.
 
-
 ![Informal-Formal](assets/informal-formal.png)
-
 
 ## Requirements
 - [1][Lean 4](https://github.com/leanprover/lean4): `v4.15.0`
@@ -26,6 +24,7 @@ We evaluate four prevalent FTP models and two prompting methods as baselines, so
 Please install Pantograph and link `/path/to/Pantograph/.lake/build/bin/repl` to `common/pantograph/pantograph-repl`
 
 ## Benchmarks
+### Details
 - **FormalMath500** is a formalized subset of the prevalent MATH500 benchmark[5,6], including 387 data points:
     - 123 about `Algebra`
     - 92 about `Intermediate Algebra`
@@ -50,6 +49,26 @@ Please install Pantograph and link `/path/to/Pantograph/.lake/build/bin/repl` to
     - 49 about `Number Theory`
     - 8 about `Probability`
     - 4 about `Set Theory`
+
+### Direct Use
+- **Formal Problem-Solving (FPS)**: Given a formal problem, generate a formal solution. The formal solution should solve all goals and provide a direct answer.
+
+- **Deductive Formal Problem-Solving (D-FPS)**: Given a formal problem, generate a forward solution and, optionally, a backward proof. The forward solution should use deductive reasoning to derive a direct answer and prove its completeness.
+The backward proof should prove the answer's soundness.
+
+- **Formal Theorem Proving (FTP)**: Given a formal problem and its ground-truth answer, generate a formal proof to prove the ground-truth's correctness.
+
+### Structures
+Each problem contains the following fields:
+- `informal_problem`: The problem in natural language (including LaTeX).
+- `informal_answer`: The ground-truth answer in natural language (including LaTeX).
+- `informal_solution`: A step-by-step solution in natural language (including LaTeX). 
+- `header`: Code that should be executed before initializing the formal problem, e.g., `open`s. If `null`, `open BigOperators Real Nat Topology` should be used.
+- `intros`: Independent variables $V$ and hypotheses $\Phi$. $V=\{v_i\}_{i=1}^n$ is the set of variables independent to the queriable $a$. $\Phi = \{\phi_i\}_{i=1}^p$ is the set of propositions that depend on $V$ (whose all free variables are included in $V$), consisting of conditions that can be used to deduce the answer.
+- `outros`: Conclusions $\Psi = \{\psi_i\}_{i=1}^q$ is the set of propositions which depend on $V \cup \{a\}$, consisting of conclusions that should be satisfied.
+- `formal_answer`: The ground-truth answer in formal language (Lean 4).
+- `formal_answer_type`: The type of the ground-truth answer in formal language (Lean 4).
+- `metainfo`: Meta-information of the problem.
 
 ## Evaluation
 
