@@ -1,3 +1,5 @@
+common/pantograph/pantograph-repl
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
