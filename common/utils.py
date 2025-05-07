@@ -18,11 +18,15 @@ import aiofiles
 from loguru import logger
 import pexpect
 
-from common.constants import Expr, _SPACES_REGEX, CODEBLOCK_PATTERN
+from common.constants import Expr, _SPACES_REGEX, CODEBLOCK_PATTERN, FPS_GLOBAL_SETTING
 
 
 replace_calc = lambda s: re.sub(r'by\s+calc', r'calc', s)
 replace_sorry = lambda s: re.sub(r'by\s+sorry', r'sorry', s)
+
+def zip_strict(*args):
+    assert len(args) > 1 and all(len(args[0]) == len(a) for a in args[1:])
+    return zip(*args)
 
 def format_variable_sequence(s : Iterable['Variable']) -> str:
     return ' '.join([f'({v.name} : {v.t})' if v.name not in [None, '_'] else f'[{v.t}]' for v in s])
@@ -45,6 +49,14 @@ def extract_code(s: str) -> str:
             step = s
 
     return step
+
+def to_sync(func):
+    @F.wraps(func)
+    def wrapper(*args, **kwargs):
+        if not FPS_GLOBAL_SETTING['TO_SYNC_ENABLED']:
+            raise RuntimeError('to_sync() is not enabled in common.constants.FPS_GLOBAL_SETTING')
+        return asyncio.get_event_loop().run_until_complete(func(*args, **kwargs))
+    return wrapper
 
 class Spawn(pexpect.spawn):
     def __init__(self, *args, **kwargs):

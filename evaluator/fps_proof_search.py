@@ -65,7 +65,7 @@ def main(
     model = model.lower()
     benchmark = benchmark.lower()
     now = datetime.now().strftime("%Y%m%d-%H%M%S")
-    log_prefix = ('proving.' if only_proving else '')+benchmark+'.'
+    log_prefix = ('proving.' if only_proving else 'solving.')+benchmark+'.'
     
     assert model in MODEL_DICT.keys()
 
@@ -89,8 +89,8 @@ def main(
 
     # Load data
     samples = []
-    with open(osp.join(benchmark_root, benchmark+'.json'), 'r') as f:
-        samples = [FormalProblem(**s) for s in json.load(f)]
+    with open(osp.join(benchmark_root, benchmark+'.jsonl'), 'r') as f:
+        samples = [FormalProblem(**json.loads(l)) for l in f.readlines()]
     
     finished = []
     log_debug(f"{benchmark} data loaded.")
@@ -155,7 +155,7 @@ def main(
             )
             cur_solution_state = search_result.final_state
             
-            sample = sample.__dict__
+            sample = sample.__dict__.copy()
             for k in set(sample.keys()).difference(PROBLEM_KEYS):
                 sample.pop(k)
             sample['search_result'] = search_result
@@ -170,7 +170,7 @@ def main(
                         eq_proof = await server.prove_eq_async(submission)
                         sample['eq_proof'] = eq_proof
                         logger.opt(colors=True).info(f"search({tag_i}): " + ('<green>Solution eq succeeded</green>' if eq_proof is not None else '<yellow>failed</yellow>'))
-                        logger.info(f'search({tag_i}): submission: {submission}, ground-truth: {sample["formal_answer"]}, eq_proof: {eq_proof}')
+                        logger.info(f'search({tag_i}): submission: {submission}, eq_proof: {eq_proof}')
                     except Exception as e:
                         logger.error(f'search({tag_i}): failed to evaluate direct answer due to {repr(e)}:\n{traceback.format_exc()}')
             finished.append(sample)

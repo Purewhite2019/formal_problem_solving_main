@@ -12,7 +12,7 @@ from loguru import logger
 import numpy as np
 from async_lru import alru_cache
 
-from common.utils import to_sync, timeit, Spawn
+from common.utils import to_sync, Spawn
 from common.constants import DEFAULT_CORE_OPTIONS, REPL_TIMEOUT, REPL_MAXREAD
 from common.pantograph.dataclasses import (
     parse_expr,

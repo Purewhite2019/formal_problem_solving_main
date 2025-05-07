@@ -8,6 +8,7 @@ from inspect import signature
 import networkx as nx
 from loguru import logger
 from openai.types import CompletionUsage
+from dacite import from_dict
 
 from common.utils import parse_expr
 from common.constants import Expr
@@ -387,6 +388,14 @@ class FormalProblem:
     
     # Meta information
     metainfo: Dict=field(default_factory=dict)
+
+    def __post_init__(self):
+        for (i, v) in enumerate(self.intros):
+            if isinstance(v, dict):
+                self.intros[i] = from_dict(Variable, v)
+        for (i, v) in enumerate(self.outros):
+            if isinstance(v, dict):
+                self.outros[i] = from_dict(Variable, v)
 
     @classmethod
     def from_kwargs(cls, **kwargs):
