@@ -11,7 +11,7 @@ As a seemingly self-explanatory task, _problem-solving_ has been a significant c
 To fill these gaps, we present a principled formulation of problem-solving as a deterministic Markov decision process; a novel framework, **FPS** (_**F**ormal **P**roblem-**S**olving_), which utilizes existing FTP (formal theorem proving) environments to perform process-verified problem-solving; and **D-FPS** (_**D**eductive **FPS**_), decoupling solving and answer verification for better human-alignment. The expressiveness, soundness and completeness of the frameworks are proven.
 We construct three benchmarks on problem-solving: **FormalMath500**, a formalization of a subset of the MATH500 benchmark; **MiniF2F-Solving** and **PutnamBench-Solving**, adaptations of FTP benchmarks MiniF2F and PutnamBench.
 For faithful, interpretable, and human-aligned evaluation, we propose **RPE** (_**R**estricted **P**ropositional **E**quivalence_), a symbolic approach to determine the _correctness_ of answers by formal verification.
-We evaluate four prevalent FTP models and two prompting methods as baselines, solving at most $23.77\%$ of FormalMath500, $27.47\%$ of MiniF2F-Solving, and $0.31\%$ of PutnamBench-Solving.
+We evaluate four prevalent FTP models and two prompting methods as baselines, solving at most $23.77%$ of FormalMath500, $27.47%$ of MiniF2F-Solving, and $0.31%$ of PutnamBench-Solving.
 
 
 ![Informal-Formal](assets/informal-formal.png)
