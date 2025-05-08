@@ -77,8 +77,8 @@ Each problem contains the following fields:
 - `informal_answer`: The ground-truth answer in natural language (including LaTeX).
 - `informal_solution`: A step-by-step solution in natural language (including LaTeX). 
 - `header`: Code that should be executed before initializing the formal problem, e.g., `open`s. If `null`, `open BigOperators Real Nat Topology` should be used.
-- `intros`: Independent variables $V$ and hypotheses $\Phi$. $V=\{v_i\}_{i=1}^n$ is the set of variables independent to the queriable $a$. $\Phi = \{\phi_i\}_{i=1}^p$ is the set of propositions that depend on $V$ (whose all free variables are included in $V$), consisting of conditions that can be used to deduce the answer.
-- `outros`: Conclusions $\Psi = \{\psi_i\}_{i=1}^q$ is the set of propositions which depend on $V \cup \{a\}$, consisting of conclusions that should be satisfied.
+- `intros`: Independent variables $V$ and hypotheses $\Phi$. $V=\\{v_i\\}\_{i=1}^n$ is the set of variables independent to the queriable $a$. $\Phi = \\{\phi_i\\}\_{i=1}^p$ is the set of propositions that depend on $V$ (whose all free variables are included in $V$), consisting of conditions that can be used to deduce the answer.
+- `outros`: Conclusions $\Psi = \\{\psi_i\\}\_{i=1}^q$ is the set of propositions which depend on $V \cup \\{a\\}$, consisting of conclusions that should be satisfied.
 - `formal_answer`: The ground-truth answer in formal language (Lean 4).
 - `formal_answer_type`: The type of the ground-truth answer in formal language (Lean 4).
 - `metainfo`: Meta-information of the problem.
