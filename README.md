@@ -5,7 +5,9 @@ This repository is the official implementation of _Beyond Theorem Proving: Formu
 [🤗Collection](https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66)
 [📃Paper](https://arxiv.org/abs/2505.04528)
 
+<div align=center>
 <img src="assets/informal-formal.png" width="75%" />
+</div>
 
 Our research focuses on:
 1. What is problem-solving?
