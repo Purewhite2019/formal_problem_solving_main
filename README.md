@@ -1,32 +1,42 @@
-# Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving
+<div align="center">
+    <h1> <a href="https://arxiv.org/abs/2505.04528">Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving</a></h1>
 
-[🤗Collection](https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66)
-[📃Paper](https://arxiv.org/abs/2505.04528)
-
-<div align=center>
-<img src="assets/informal-formal.png" width="85%" />
+  <p align="center" style="font-size: 30px">
+    <a href="https://arxiv.org/abs/2505.04528">📃Paper</a> • 
+    <a href="https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66">🤗Data</a> • 
+    <a href="#-citation">📖Citation
+  </p>
+  <br>
+  <img width="95%" src=assets/informal-formal.png>
 </div>
+
+## 🚩 News
+
+- [2024/5/8] Release benchmark collection. See [here](https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66).
+- [2025/5/8] Upload [paper](https://arxiv.org/abs/2505.04528) and init [project](https://github.com/Purewhite2019/formal_problem_solving_main). 
+
+## 🏃 Intro FPS
 
 Our research focuses on:
 1. What is problem-solving?
 2. Beyond proving known targets, how can process-verified problem-solving be conducted inside existing formal theorem proving (FTP) environments?
 
-## Contribution
+## 💡 Contribution
 - A principled formulation of problem-solving as a deterministic Markov decision process;
 - **FPS** (_**F**ormal **P**roblem-**S**olving_), utilizing FTP (formal theorem proving) environments to perform process-verified problem-solving;
 - **D-FPS** (_**D**eductive **FPS**_), decoupling solving and answer verification for better human-alignment;
 - **RPE** (_**R**estricted **P**ropositional **E**quivalence_), a symbolic approach to determine the _correctness_ of answers by formal verification;
 - Three benchmarks on problem-solving: **FormalMath500**, **MiniF2F-Solving** and **PutnamBench-Solving**.
 
-## Requirements
-- [1][Lean 4](https://github.com/leanprover/lean4): `v4.15.0`
-- [2][Mathlib 4](https://github.com/leanprover-community/mathlib4): `v4.15.0`
-- [3][Aesop](https://github.com/leanprover-community/aesop): `v4.15.0`
-- [4][Pantograph](https://github.com/lenianiva/Pantograph): `v0.2.25`
+## ⚡ Requirements
+- [1] [Lean 4](https://github.com/leanprover/lean4): `v4.15.0`
+- [2] [Mathlib 4](https://github.com/leanprover-community/mathlib4): `v4.15.0`
+- [3] [Aesop](https://github.com/leanprover-community/aesop): `v4.15.0`
+- [4] [Pantograph](https://github.com/lenianiva/Pantograph): `v0.2.25`
 
 Please install Pantograph and link `/path/to/Pantograph/.lake/build/bin/repl` to `common/pantograph/pantograph-repl`
 
-## Benchmarks
+## 📁 Benchmarks
 ### Details
 - **FormalMath500** is a formalized subset of the prevalent MATH500 benchmark[5,6], including 387 data points:
     - 123 about `Algebra`
@@ -73,7 +83,7 @@ Each problem contains the following fields:
 - `formal_answer_type`: The type of the ground-truth answer in formal language (Lean 4).
 - `metainfo`: Meta-information of the problem.
 
-## Evaluation
+## 💻 Evaluation
 
 Please run the following commands to reproduce baseline experiments.
 
@@ -176,7 +186,7 @@ do
 done
 ```
 
-## Baseline Performance
+## 📊 Baseline Performance
 - _Solved_: indicates the portion that is successfully solved;
 - _Proven_: indicates the portion whose statements (asserting the correctness of ground-truth answer) are proven;
 - _NE-Submitted_: indicates the portion of problems whose submitted answers are incorrect under RPE (lower is better).
@@ -203,11 +213,27 @@ done
 |           |                 | Hybrid CoT             | DeepSeek-V3             | 0.00%   |         | 0.31%         |
 
 
-## Contributing
+## 📧 Contributing
 This project is released under the Apache 2.0 license. Please see the [LICENSE](./LICENSE) file for more information.
 
 Feel free to discuss the paper/data/code with us through issues/emails!
 - Qi Liu: purewhite@sjtu.edu.cn
+
+## 📖 Citation
+
+If you find our work helps, please consider starring ⭐ us and citing:
+
+```{bibtex}
+@misc{liu2025theoremprovingformulationframework,
+      title={Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving}, 
+      author={Qi Liu and Xinhao Zheng and Renqiu Xia and Xingzhi Qi and Qinxiang Cao and Junchi Yan},
+      year={2025},
+      eprint={2505.04528},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2505.04528}, 
+}
+```
 
 ## References
 [1] Moura, Leonardo de, and Sebastian Ullrich. "The Lean 4 theorem prover and programming language." Automated Deduction–CADE 28: 28th International Conference on Automated Deduction, Virtual Event, July 12–15, 2021, Proceedings 28. Springer International Publishing, 2021.
