@@ -6,7 +6,7 @@ This repository is the official implementation of _Beyond Theorem Proving: Formu
 [📃Paper](https://arxiv.org/abs/2505.04528)
 
 <div align=center>
-<img src="assets/informal-formal.png" width="100%" />
+<img src="assets/informal-formal.png" width="85%" />
 </div>
 
 Our research focuses on:
