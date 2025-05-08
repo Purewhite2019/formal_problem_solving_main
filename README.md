@@ -1,7 +1,5 @@
 # Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving
 
-This repository is the official implementation of _Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving_. 
-
 [🤗Collection](https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66)
 [📃Paper](https://arxiv.org/abs/2505.04528)
 
