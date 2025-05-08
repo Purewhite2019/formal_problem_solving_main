@@ -248,7 +248,7 @@ def main(
                     try:
                         submission = await server.get_submission_async(cur_solution_state)
                         sample['submission'] = submission
-                        eq_proof = await server.prove_eq_async(submission)
+                        eq_proof = await server.check_rpe_async(submission)
                         sample['eq_proof'] = eq_proof
                         logger.opt(colors=True).info(f"search({tag_i}): " + ('<green>Solution eq succeeded</green>' if eq_proof is not None else '<yellow>failed</yellow>'))
                         logger.info(f'search({tag_i}): submission: {submission}, eq_proof: {eq_proof}')

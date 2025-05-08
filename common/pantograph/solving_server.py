@@ -98,7 +98,7 @@ class TermSolvingServer(BaseSolvingServer):
             
     init_solving_state = to_sync(init_solving_state_async)
 
-    async def prove_eq_async(self, submission: str) -> Optional[str]:
+    async def check_rpe_async(self, submission: str) -> Optional[str]:
         await self.server.restart_async()
         rpe_code = 'example' + \
             ((' ' + format_variable_sequence(self.sample.intros) + '\n') if len(self.sample.intros) > 0 else '\n') + \
@@ -113,7 +113,7 @@ class TermSolvingServer(BaseSolvingServer):
         except:
             return None
 
-    prove_eq = to_sync(prove_eq_async)
+    check_rpe = to_sync(check_rpe_async)
 
 
 # Answer as Prop
@@ -187,4 +187,4 @@ class PropSolvingServer(BaseSolvingServer):
         except:
             return None
 
-    prove_eq = to_sync(check_rpe_async)
+    check_rpe = to_sync(check_rpe_async)
