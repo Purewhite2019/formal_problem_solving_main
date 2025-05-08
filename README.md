@@ -18,7 +18,7 @@ Our research focuses on:
 - **FPS** (_**F**ormal **P**roblem-**S**olving_), utilizing FTP (formal theorem proving) environments to perform process-verified problem-solving;
 - **D-FPS** (_**D**eductive **FPS**_), decoupling solving and answer verification for better human-alignment;
 - **RPE** (_**R**estricted **P**ropositional **E**quivalence_), a symbolic approach to determine the _correctness_ of answers by formal verification;
-- Three benchmarks on problem-solving: **FormalMath500**, a formalization of a subset of the MATH500 benchmark; **MiniF2F-Solving** and **PutnamBench-Solving**.
+- Three benchmarks on problem-solving: **FormalMath500**, **MiniF2F-Solving** and **PutnamBench-Solving**.
 
 ## Requirements
 - [1][Lean 4](https://github.com/leanprover/lean4): `v4.15.0`
