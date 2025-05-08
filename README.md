@@ -2,18 +2,21 @@
 
 This repository is the official implementation of _Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving_. 
 
+[🤗Collection](https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66)
+[📃Paper](https://arxiv.org/abs/2505.04528)
+
+<img src="assets/informal-formal.png" width="50%" />
+
 Our research focuses on:
 1. What is problem-solving?
 2. Beyond proving known targets, how can process-verified problem-solving be conducted inside existing formal theorem proving (FTP) environments?
 
-## Abstract
-As a seemingly self-explanatory task, _problem-solving_ has been a significant component of science and engineering. However, a general yet concrete formulation of problem-solving itself is missing. With the recent development of AI-based problem-solving agents, the demand for process-level verifiability is rapidly increasing yet underexplored.
-To fill these gaps, we present a principled formulation of problem-solving as a deterministic Markov decision process; a novel framework, **FPS** (_**F**ormal **P**roblem-**S**olving_), which utilizes existing FTP (formal theorem proving) environments to perform process-verified problem-solving; and **D-FPS** (_**D**eductive **FPS**_), decoupling solving and answer verification for better human-alignment. The expressiveness, soundness and completeness of the frameworks are proven.
-We construct three benchmarks on problem-solving: **FormalMath500**, a formalization of a subset of the MATH500 benchmark; **MiniF2F-Solving** and **PutnamBench-Solving**, adaptations of FTP benchmarks MiniF2F and PutnamBench.
-For faithful, interpretable, and human-aligned evaluation, we propose **RPE** (_**R**estricted **P**ropositional **E**quivalence_), a symbolic approach to determine the _correctness_ of answers by formal verification.
-We evaluate four prevalent FTP models and two prompting methods as baselines, solving at most 23.77% of FormalMath500, 27.47% of MiniF2F-Solving, and 0.31% of PutnamBench-Solving.
-
-![Informal-Formal](assets/informal-formal.png)
+## Contribution
+- A principled formulation of problem-solving as a deterministic Markov decision process;
+- **FPS** (_**F**ormal **P**roblem-**S**olving_), utilizing FTP (formal theorem proving) environments to perform process-verified problem-solving;
+- **D-FPS** (_**D**eductive **FPS**_), decoupling solving and answer verification for better human-alignment;
+- **RPE** (_**R**estricted **P**ropositional **E**quivalence_), a symbolic approach to determine the _correctness_ of answers by formal verification;
+- Three benchmarks on problem-solving: **FormalMath500**, a formalization of a subset of the MATH500 benchmark; **MiniF2F-Solving** and **PutnamBench-Solving**.
 
 ## Requirements
 - [1][Lean 4](https://github.com/leanprover/lean4): `v4.15.0`
@@ -204,7 +207,7 @@ done
 This project is released under the Apache 2.0 license. Please see the [LICENSE](./LICENSE) file for more information.
 
 Feel free to discuss the paper/data/code with us through issues/emails!
-- (Anonymous)
+- Qi Liu: purewhite@sjtu.edu.cn
 
 ## References
 [1] Moura, Leonardo de, and Sebastian Ullrich. "The Lean 4 theorem prover and programming language." Automated Deduction–CADE 28: 28th International Conference on Automated Deduction, Virtual Event, July 12–15, 2021, Proceedings 28. Springer International Publishing, 2021.
