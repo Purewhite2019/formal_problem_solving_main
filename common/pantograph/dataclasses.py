@@ -1,16 +1,14 @@
 from dataclasses import dataclass, field, fields
-from typing import Union, Tuple, List, Dict, Any, Optional
+from typing import Tuple, List, Dict, Optional
+from enum import Enum
 import json
 import regex as re
-import collections as C
-from inspect import signature
 
-import networkx as nx
 from loguru import logger
-from openai.types import CompletionUsage
 from dacite import from_dict
+import msgspec
 
-from common.utils import parse_expr
+from common.utils import parse_expr, normalize_draft, replace_span, remove_comments
 from common.constants import Expr
 
 
@@ -92,8 +90,6 @@ class Goal:
                     vars_to_format = vars_to_format[i+1:]
         output += ("|" if self.is_conversion else "⊢") + ' ' + self.target
         return output
-        # front = "|" if self.is_conversion else "⊢"
-        # return ('' if self.name is None else 'case ' + self.name + '\n') + (("\n".join(str(v) for v in self.variables) + '\n') if len(self.variables) > 0 else '') + f"{front} {self.target}"
 
     def serialize(self) -> Dict:
         return {
@@ -116,7 +112,7 @@ class GoalState:
             'state_id': self.state_id,
             'goals': [g.serialize() for g in self.goals],
             'payload': self.payload,
-            '_sentinel': self._sentinel,
+            '_sentinel': [],
         }
 
     def __del__(self):
@@ -228,7 +224,7 @@ class TacticDraft:
     """
     expr: str
 
-Tactic = Union[str, TacticHave, TacticLet, TacticCalc, TacticExpr, TacticDraft]
+Tactic = str
 
 @dataclass(frozen=True)
 class TacticInvocation:
@@ -236,11 +232,9 @@ class TacticInvocation:
     One tactic invocation with the before/after goals extracted from Lean source
     code.
     """
-    before: str
-    after: str
+    before: List[str]
+    after: List[str]
     tactic: str
-    used_constants: List[str]
-    sub_invocations: List['TacticInvocation'] = field(default_factory=list)
 
     @staticmethod
     def parse(payload: Dict):
@@ -248,8 +242,14 @@ class TacticInvocation:
             before=payload["goalBefore"],
             after=payload["goalAfter"],
             tactic=payload["tactic"],
-            used_constants=payload.get('usedConstants', []),
         )
+
+    def serialize(self) -> Dict:
+        return {
+            'before': self.before,
+            'after': self.after,
+            'tactic': self.tactic,
+        }
 
 @dataclass(frozen=True)
 class CompilationUnit:
@@ -298,6 +298,17 @@ class CompilationUnit:
             goal_src_boundaries,
             new_constants
         )
+    
+    def serialize(self) -> Dict:
+        return {
+            'i_begin': self.i_begin,
+            'i_end': self.i_end,
+            'messages': self.messages,
+            'invocations': None if self.invocations is None else [ivc.serialize() for ivc in self.invocations],
+            'goal_state': None if self.goal_state is None else self.goal_state.serialize(),
+            'goal_src_boundaries': None if self.goal_src_boundaries is None else self.goal_src_boundaries,
+            'new_constants': None if self.new_constants is None else self.new_constants,
+        }
 
 @dataclass(frozen=True)
 class ProofSearchState:
@@ -305,7 +316,6 @@ class ProofSearchState:
     parent: Optional['ProofSearchState']
     last_step: Optional[Tuple[int, Tactic]]
     cost: float
-    recursion_depth: int=0
 
     def __lt__(self, other: 'ProofSearchState') -> bool:
         assert isinstance(other, ProofSearchState)
@@ -313,62 +323,11 @@ class ProofSearchState:
     
     @property
     def tactic_history(self) -> List[Tactic]:
-        # TODO: Consider recursive proof?
         return ([] if self.parent is None else self.parent.tactic_history) + ([] if self.last_step is None else [self.last_step])
 
     @property
     def state_history(self) -> List[GoalState]:
-        # TODO: Consider recursive proof?
         return ([] if self.parent is None else self.parent.state_history) + [self.state]
-
-@dataclass(frozen=True)
-class ProofSearchResult:
-    duration: float
-    success: bool
-    proof: List[Tuple[int, Tactic]] = field(default_factory=list)
-    final_state: Optional[GoalState] = None
-    states: List[GoalState] = field(default_factory=list)
-
-    def serialize(self) -> Dict:
-        return {
-            'duration': self.duration,
-            'success': self.success,
-            'proof': [{
-                'goal_id': i,
-                'proof_step': t
-            } for (i, t) in self.proof],
-            'final_state': None if self.final_state is None else self.final_state.serialize(),
-            'states': [s.serialize() for s in self.states],
-        }
-
-@dataclass
-class TokenUsage:
-    prompt_cache_hit_tokens: int=0
-    prompt_cache_miss_tokens: int=0
-    completion_tokens: int=0
-    
-    def serialize(self) -> Dict:
-        return {
-            'prompt_cache_hit_tokens': self.prompt_cache_hit_tokens,
-            'prompt_cache_miss_tokens': self.prompt_cache_miss_tokens,
-            'completion_tokens': self.completion_tokens
-        }
-    
-    def __iadd__(self, other: Union['TokenUsage', CompletionUsage, None]):
-        # Modify self in place
-        if isinstance(other, TokenUsage):
-            self.prompt_cache_hit_tokens += other.prompt_cache_hit_tokens
-            self.prompt_cache_miss_tokens += other.prompt_cache_miss_tokens
-            self.completion_tokens += other.completion_tokens
-        elif isinstance(other, CompletionUsage):
-            cached_tokens = 0 if (other.prompt_tokens_details is None or other.prompt_tokens_details.cached_tokens is None) else other.prompt_tokens_details.cached_tokens
-            self.prompt_cache_hit_tokens += cached_tokens
-            self.prompt_cache_miss_tokens += other.prompt_tokens - cached_tokens
-            self.completion_tokens += other.completion_tokens
-        else:
-            assert other is None
-        # Return self to allow chaining
-        return self
 
 @dataclass
 class FormalProblem:
@@ -379,21 +338,22 @@ class FormalProblem:
     
     # Formal problem
     header: Optional[str]=None
-    intros: List[Variable]=field(default_factory=list)
+    independent_variables: List[Variable]=field(default_factory=list)
     formal_answer: Optional[str]=None
     formal_answer_type: Optional[str]=None
-    outros: List[Variable]=field(default_factory=list)
+    hypotheses: List[Variable]=field(default_factory=list)
+    conclusions: List[str]=field(default_factory=list)
     
     # Meta information
     metainfo: Dict=field(default_factory=dict)
 
     def __post_init__(self):
-        for (i, v) in enumerate(self.intros):
+        for (i, v) in enumerate(self.independent_variables):
             if isinstance(v, dict):
-                self.intros[i] = from_dict(Variable, v)
-        for (i, v) in enumerate(self.outros):
+                self.independent_variables[i] = from_dict(Variable, v)
+        for (i, v) in enumerate(self.hypotheses):
             if isinstance(v, dict):
-                self.outros[i] = from_dict(Variable, v)
+                self.hypotheses[i] = from_dict(Variable, v)
 
     @classmethod
     def from_kwargs(cls, **kwargs):
@@ -418,11 +378,11 @@ class FormalProblem:
         return {
             'informal_problem': self.informal_problem,
             'informal_answer': self.informal_answer,
-            'informal_solution': self.informal_solution,
             'header': self.header,
-            'intros': [v.serialize() for v in self.intros],
+            'independent_variables': [v.serialize() for v in self.independent_variables],
             'formal_answer': self.formal_answer,
             'formal_answer_type': self.formal_answer_type,
-            'outros': [v.serialize() for v in self.outros],
+            'hypotheses': [v.serialize() for v in self.hypotheses],
+            'conclusions': self.conclusions,
             'metainfo': self.metainfo,
         }

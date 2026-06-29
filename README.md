@@ -1,253 +1,227 @@
 <div align="center">
-    <h1> <a href="https://arxiv.org/abs/2505.04528">Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving</a></h1>
-
-  <p align="center" style="font-size: 30px">
-    <a href="https://arxiv.org/abs/2505.04528">📃Paper</a> • 
-    <a href="https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66">🤗Data</a> • 
-    <a href="#-citation">📖Citation
+  <h1><a href="https://openreview.net/forum?id=hgMZraPlSv">Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving</a></h1>
+  <p><strong>ICML 2026 Spotlight</strong></p>
+  <p>
+    <a href="https://openreview.net/forum?id=hgMZraPlSv">Paper</a> |
+    <a href="https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66">Data</a> |
+    <a href="#citation">Citation</a>
   </p>
   <br>
-  <img width="95%" src=assets/informal-formal.png>
+  <img width="100%" src="assets/informal-formal.png">
 </div>
 
-## 🚩 News
+This repository contains the code and data for ICML'26 Spotlight _Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving_. The benchmarks support formal problem-solving (FPS), deductive FPS (D-FPS), and formal theorem proving (FTP) evaluation in Lean 4.
 
-- [2024/5/8] Release benchmark collection. See [here](https://huggingface.co/collections/purewhite42/formal-problem-solving-681b573aac8f09f308bb7c66).
-- [2025/5/8] Upload [paper](https://arxiv.org/abs/2505.04528) and init [project](https://github.com/Purewhite2019/formal_problem_solving_main). 
+## Requirements
 
-## 🏃 Intro FPS
+- [Lean 4](https://github.com/leanprover/lean4) `v4.15.0`
+- [Mathlib 4](https://github.com/leanprover-community/mathlib4) `v4.15.0`
+- [Aesop](https://github.com/leanprover-community/aesop) `v4.15.0`
+- [Pantograph](https://github.com/lenianiva/Pantograph) `v0.2.25`
 
-Our research focuses on:
-1. What is problem-solving?
-2. Beyond proving known targets, how can process-verified problem-solving be conducted inside existing formal theorem proving (FTP) environments?
+Install Pantograph and link `/path/to/Pantograph/.lake/build/bin/repl` to `common/pantograph/pantograph-repl`.
 
-## 💡 Contribution
-- A principled formulation of problem-solving as a deterministic Markov decision process;
-- **FPS** (_**F**ormal **P**roblem-**S**olving_), utilizing FTP (formal theorem proving) environments to perform process-verified problem-solving;
-- **D-FPS** (_**D**eductive **FPS**_), decoupling solving and answer verification for better human-alignment;
-- **RPE** (_**R**estricted **P**ropositional **E**quivalence_), a symbolic approach to determine the _correctness_ of answers by formal verification;
-- Three benchmarks on problem-solving: **FormalMath500**, **MiniF2F-Solving** and **PutnamBench-Solving**.
+## Benchmarks
 
-## ⚡ Requirements
-- [1] [Lean 4](https://github.com/leanprover/lean4): `v4.15.0`
-- [2] [Mathlib 4](https://github.com/leanprover-community/mathlib4): `v4.15.0`
-- [3] [Aesop](https://github.com/leanprover-community/aesop): `v4.15.0`
-- [4] [Pantograph](https://github.com/lenianiva/Pantograph): `v0.2.25`
+The released JSONL benchmarks are in `data/` and are synchronized with the Lean 4 project in `data/formal_problem_solving/`.
 
-Please install Pantograph and link `/path/to/Pantograph/.lake/build/bin/repl` to `common/pantograph/pantograph-repl`
+| JSONL File | Lean Directory | Benchmark | Size |
+| --- | --- | --- | ---: |
+| `data/formal_math500.jsonl` | `data/formal_problem_solving/FormalProblemSolving/FormalMath500` | FormalMath500 | 387 |
+| `data/minif2f_solving.jsonl` | `data/formal_problem_solving/FormalProblemSolving/MiniF2FSolving` | MiniF2F-Solving | 375 |
+| `data/putnam_solving.jsonl` | `data/formal_problem_solving/FormalProblemSolving/PutnamBenchSolving` | PutnamBench-Solving | 324 |
 
-## 📁 Benchmarks
-### Details
-- **FormalMath500** is a formalized subset of the prevalent MATH500 benchmark[5,6], including 387 data points:
-    - 123 about `Algebra`
-    - 92 about `Intermediate Algebra`
-    - 62 about `Number Theory`
-    - 65 about `Prealgebra`
-    - 45 about `Precalculus`
+**FormalMath500** is a formalized subset of MATH500 with 387 samples covering Algebra, Intermediate Algebra, Number Theory, Prealgebra, and Precalculus.
 
-- **MiniF2F-Solving** is a refactored subset of MiniF2F[7], containing in 375 data points with:
-    - 30 from `AIME`
-    - 140 from `MATH-Algebra`
-    - 82 from `AMC`
-    - 3 from `IMO`
-    - 120 from `MATH-Number Theory`
+**MiniF2F-Solving** refactors MiniF2F propositions into problem-solving instances with detached direct answers. It contains 375 samples from AIME, MATH-Algebra, AMC, IMO, and MATH-Number Theory.
 
-- **PutnamBench-Solving** is a refactored subset of PutnamBench[8], containing 324 data points with:
-    - 9 about `Abstract Algebra`
-    - 138 about `Algebra`
-    - 122 about `Analysis`
-    - 14 about `Combinatorics`
-    - 28 about `Geometry`
-    - 25 about `Linear Algebra`
-    - 49 about `Number Theory`
-    - 8 about `Probability`
-    - 4 about `Set Theory`
+**PutnamBench-Solving** refactors a subset of PutnamBench into 324 undergraduate-level problem-solving instances across algebra, analysis, number theory, geometry, linear algebra, combinatorics, abstract algebra, probability, and set theory.
 
-### Direct Use
-- **Formal Problem-Solving (FPS)**: Given a formal problem, generate a formal solution. The formal solution should solve all goals and provide a direct answer.
+The benchmarks are derived from existing open datasets: FormalMath500 uses informal problems and answers sampled from MATH under the MIT License; MiniF2F-Solving refactors the MiniF2F Lean subset under the Apache 2.0 License; PutnamBench-Solving refactors the PutnamBench Lean subset under the Apache 2.0 License. The released artifacts include the corresponding license files in the Lean benchmark directories.
 
-- **Deductive Formal Problem-Solving (D-FPS)**: Given a formal problem, generate a forward solution and, optionally, a backward proof. The forward solution should use deductive reasoning to derive a direct answer and prove its completeness.
-The backward proof should prove the answer's soundness.
+Each JSONL record contains the following core fields:
 
-- **Formal Theorem Proving (FTP)**: Given a formal problem and its ground-truth answer, generate a formal proof to prove the ground-truth's correctness.
+- `informal_problem`: the natural-language problem statement.
+- `informal_answer`: the natural-language ground-truth answer.
+- `header`: Lean openings/options used before the formal problem.
+- `independent_variables`: problem-level independent variables.
+- `hypotheses`: assumptions rendered in the `s.t.` / `iff` block before the conclusion.
+- `conclusions`: Lean propositions that the queried answer must satisfy.
+- `formal_answer`: the formal ground-truth answer predicate in Lean 4.
+- `formal_answer_type`: the Lean type of the direct answer.
+- `metainfo`: benchmark name and sample index.
 
-### Structures
-Each problem contains the following fields:
-- `informal_problem`: The problem in natural language (including LaTeX).
-- `informal_answer`: The ground-truth answer in natural language (including LaTeX).
-- `informal_solution`: A step-by-step solution in natural language (including LaTeX). 
-- `header`: Code that should be executed before initializing the formal problem, e.g., `open`s. If `null`, `open BigOperators Real Nat Topology` should be used.
-- `intros`: Independent variables $V$ and hypotheses $\Phi$. $V=\\{v_i\\}\_{i=1}^n$ is the set of variables independent to the queriable $a$. $\Phi = \\{\phi_i\\}\_{i=1}^p$ is the set of propositions that depend on $V$ (whose all free variables are included in $V$), consisting of conditions that can be used to deduce the answer.
-- `outros`: Conclusions $\Psi = \\{\psi_i\\}\_{i=1}^q$ is the set of propositions which depend on $V \cup \\{a\\}$, consisting of conclusions that should be satisfied.
-- `formal_answer`: The ground-truth answer in formal language (Lean 4).
-- `formal_answer_type`: The type of the ground-truth answer in formal language (Lean 4).
-- `metainfo`: Meta-information of the problem.
+## Evaluation
 
-## 💻 Evaluation
+In evaluator outputs, `proven` means that the generated Lean proof/solution is syntactically valid. For FPS and D-FPS, `solved` additionally requires the RPE answer-equivalence.
 
-Please run the following commands to reproduce baseline experiments.
 
-\*For Proof Search and Whole-Proof Generation, set `only_proving=False` to evaluate FPS (finding a correct answer + proving its correctness) and `only_proving=True` to evaluate FTP (proving the correctness of the ground-truth answer).
+### Whole-Proof Generation for FPS/FTP
 
-### Proof Search (FPS)
-- `model=stepprover_vanilla_avggoal`: Best-first Search w/ InternLM2.5-StepProver
-- `model=leanstar_vanilla_avggoal`: Best-first Search w/ LeanSTaR
+Use `--task fps` for FPS and `--task tp` for FTP.
+Supported whole-proof agents include DeepSeek-Prover-V1.5 (`deepseek_prover_v15`), DeepSeek-Prover-V2-CoT (`deepseek_prover_v2_cot`), DeepSeek-Prover-V2-nonCoT (`deepseek_prover_v2_noncot`), Goedel-Prover (`goedel_prover`), Goedel-Prover-V2 (`goedel_prover_v2`), Kimina-Prover (`kimina_prover`), STP (`stp`), TheoremLlama (`theoremllama`), and Prompting generalist LLMs (`prompt`).
+
 
 ```shell
 ulimit -s unlimited
-for FPS_BENCHMARK in formal_math500 minif2f_solving putnam_solving;
-do
-    python -m evaluator.fps_proof_search \
-            --log_root /path/to/output \
-            --model "model_to_evaluate" \
-            --benchmark ${FPS_BENCHMARK} \
-            --project_root /path/to/mathlib4 \
-            --max_search_trials 600 \
-            --temperature 0.7 \
-            --max_tokens 256 \
-            --num_concurrency 32 \
-            --verbose False \
-            --gen_base_url "https://url.to.openai-style.api.server/" \
-            --gen_api_key "gen_api_key" \
-            --gen_model_name "name/of/proof-search-model" \
-            --only_proving False
-done
+python main.py \
+  --log_root /path/to/output \
+  --task ... \
+  --agent ... \
+  --benchmark ... \
+  --benchmark_root ./data \
+  --project_root ./data/formal_problem_solving \
+  --num_samples_per_trial ... \
+  --num_concurrency ... \
+  --gen_base_url http://vllm.endpoint/v1 \
+  --gen_api_key "some_api_key" \
+  --gen_model_name /path/to/model
 ```
 
-### Whole-Proof Generation (FPS)
-- `model=deepseek_prover`: DeepSeekProver-V1.5
-- `model=theoremllama`: TheoremLlama
+### Proof Search for FPS/FTP
+
+Use `--task fps` for FPS and `--task tp` for FTP.
+Supported proof search agents include InternLM2.5-StepProver (`stepprover`) and Lean-STaR (`leanstar`).
 
 ```shell
 ulimit -s unlimited
-for FPS_BENCHMARK in formal_math500 minif2f_solving putnam_solving;
-do
-    python -m evaluator.fps_whole_proof_generation \
-            --log_root /path/to/output \
-            --model "model_to_evaluate" \
-            --benchmark ${FPS_BENCHMARK} \
-            --project_root /path/to/mathlib4 \
-            --num_samples_per_trial 128 \
-            --temperature 1.0 \
-            --top_p 0.95 \
-            --max_tokens 2048 \
-            --num_concurrency 8 \
-            --verbose False \
-            --gen_base_url "https://url.to.openai-style.api.server/" \
-            --gen_api_key "gen_api_key" \
-            --gen_model_name "name/of/whole-proof-generation-model" \
-            --only_proving False
-done
+python main.py \
+  --log_root /path/to/output \
+  --task fps \
+  --agent ... \
+  --benchmark ... \
+  --benchmark_root ./data \
+  --project_root ./data/formal_problem_solving \
+  --max_search_trials ... \
+  --num_tactics_per_trial ... \
+  --temperature ... \
+  --max_tokens ... \
+  --num_concurrency ... \
+  --gen_base_url http://vllm.endpoint/v1 \
+  --gen_api_key "some_api_key" \
+  --gen_model_name /path/to/model
 ```
 
-### Prompting Methods (D-FPS)
-- In-Context Learning
+### D-FPS
+
+Supported D-FPS agents include direct in-context prompting (`direct_icl`) and hybrid CoT (`hybrid_cot`).
 
 ```shell
 ulimit -s unlimited
-for FPS_BENCHMARK in formal_math500 minif2f_solving putnam_solving;
-do
-    ulimit -s unlimited
-    python -m evaluator.fps_icl \
-            --log_root /path/to/output \
-            --benchmark ${FPS_BENCHMARK} \
-            --project_root /path/to/mathlib4 \
-            --num_samples_per_trial 16 \
-            --temperature 1.0 \
-            --top_p 0.95 \
-            --max_tokens 8192 \
-            --num_concurrency 16 \
-            --verbose False \
-            --gen_base_url "https://url.to.openai-style.api.server/" \
-            --gen_api_key "api-key" \
-            --gen_model_name "name/of/general-LLM"
-done
+python main.py \
+  --log_root /path/to/output \
+  --task d-fps \
+  --agent ... \
+  --benchmark ... \
+  --demonstration_path ./data/prompt_hybrid_cot_final.jsonl \
+  --benchmark_root ./data \
+  --project_root ./data/formal_problem_solving \
+  --try_num ... \
+  --temperature ... \
+  --max_tokens ... \
+  --num_concurrency ... \
+  --solver_base_url https://openai-compatible.endpoint/v1 \
+  --solver_api_key "some_api_key" \
+  --solver_model_name your-general-llm
 ```
 
-- Hybrid CoT
+### Export And Build Lean Benchmark
+
+Regenerate the Lean benchmark project from the released JSONL source:
 
 ```shell
-ulimit -s unlimited
-for FPS_BENCHMARK in formal_math500 minif2f_solving putnam_solving;
-do
-    ulimit -s unlimited
-    python -m evaluator.fps_hybrid_cot \
-            --log_root /path/to/output \
-            --benchmark ${FPS_BENCHMARK} \
-            --num_samples_per_trial 16 \
-            --temperature 1.0 \
-            --top_p 0.95 \
-            --max_tokens 8192 \
-            --num_concurrency 16 \
-            --verbose False \
-            --gen_base_url "https://url.to.openai-style.api.server/" \
-            --gen_api_key "api-key" \
-            --gen_model_name "name/of/general-LLM"
-done
+python common/export_fps_benchmark.py \
+  --data_root data \
+  --output_root data/formal_problem_solving \
+  --benchmark all
 ```
 
-## 📊 Baseline Performance
-- _Solved_: indicates the portion that is successfully solved;
-- _Proven_: indicates the portion whose statements (asserting the correctness of ground-truth answer) are proven;
-- _NE-Submitted_: indicates the portion of problems whose submitted answers are incorrect under RPE (lower is better).
+Then build the Lean project:
 
-| Framework | Benchmark       | Method                 | Model                   | Solved↑ | Proven↑ | NE-Submitted↓ |
-|-----------|-----------------|------------------------|-------------------------|---------|---------|---------------|
-| FPS       | FormalMath500   | Proof Search           | InternLM2.5-StepProver  | 23.77%  | 47.55%  | 19.38%        |
-|           |                 |                        | LeanSTaR                | 23.51%  | 43.41%  | 20.93%        |
-|           |                 | Whole-Proof Generation | DeepSeekProver-V1.5     | 22.22%  | 46.51%  | 14.47%        |
-|           |                 |                        | TheoremLlama            | 16.02%  | 4.39%   | 15.50%        |
-|           | MiniF2F-Solving | Proof Search           | InternLM2.5-StepProver  | 27.47%  | 50.67%  | 13.60%        |
-|           |                 |                        | LeanSTaR                | 24.27%  | 49.33%  | 14.40%        |
-|           |                 | Whole-Proof Generation | DeepSeekProver-V1.5     | 22.40%  | 53.60%  | 10.93%        |
-|           |                 |                        | TheoremLlama            | 13.07%  | 7.73%   | 8.80%         |
-|           | Putnam-Solving  | Proof Search           | InternLM2.5-StepProver  | 0.00%   | 1.54%   | 28.09%        |
-|           |                 |                        | LeanSTaR                | 0.00%   | 0.93%   | 41.05%        |
-|           |                 | Whole-Proof Generation | DeepSeekProver-V1.5     | 0.31%   | 1.54%   | 22.22%        |
-|           |                 |                        | TheoremLlama            | 0.00%   | 0.31%   | 16.67%        |
-| D-FPS     | FormalMath500   | ICL                    | DeepSeek-V3             | 13.70%  |         | 0.00%         |
-|           |                 | Hybrid CoT             | DeepSeek-V3             | 15.50%  |         | 1.03%         |
-|           | MiniF2F-Solving | ICL                    | DeepSeek-V3             | 21.87%  |         | 0.00%         |
-|           |                 | Hybrid CoT             | DeepSeek-V3             | 21.60%  |         | 0.00%         |
-|           | Putnam-Solving  | ICL                    | DeepSeek-V3             | 0.00%   |         | 0.00%         |
-|           |                 | Hybrid CoT             | DeepSeek-V3             | 0.00%   |         | 0.31%         |
+```shell
+cd data/formal_problem_solving
+lake build
+```
 
 
-## 📧 Contributing
+## Evaluation Results
+
+### FPS
+
+| Benchmark | Method | Model | Proven | Typecheck | Solved |
+| --- | --- | --- | ---: | ---: | ---: |
+| FormalMath500 | Proof Search | InternLM2.5-StepProver | 49.53±0.30% | 43.93±0.93% | 27.22±1.33% |
+| FormalMath500 | Proof Search | LeanSTaR | 55.49±2.48% | 40.14±1.87% | 25.06±0.78% |
+| FormalMath500 | Whole-Proof | DeepSeekProver-V1.5 | 47.89±0.54% | 9.13±0.39% | 8.01±0.26% |
+| FormalMath500 | Whole-Proof | Goedel-Prover | 53.49±0.93% | 4.39±1.79% | 3.53±1.42% |
+| FormalMath500 | Whole-Proof | Kimina-Prover | 60.38±0.98% | 31.52±0.45% | 30.32±0.15% |
+| FormalMath500 | Whole-Proof | DeepSeek-Prover-V2 non-CoT | 68.91±0.65% | 0.43±0.39% | 0.43±0.39% |
+| FormalMath500 | Whole-Proof | DeepSeek-Prover-V2 CoT | 72.18±1.04% | 34.80±0.65% | 33.68±1.04% |
+| FormalMath500 | Whole-Proof | STP | 50.82±1.17% | 9.39±0.65% | 6.55±0.15% |
+| FormalMath500 | Whole-Proof | Goedel-Prover-V2-8B | 80.19±0.15% | 68.04±0.75% | 59.17±0.26% |
+| FormalMath500 | Prompt | DeepSeek-V3.2 | 39.79% | 18.35% | 14.99% |
+| FormalMath500 | Prompt | Sonnet-4.5 | 30.23% | 7.75% | 6.72% |
+| FormalMath500 | DSP+ | DeepSeek-V3.2+BFS-Prover-V1-7B | 20.93% | 30.49% | 28.42% |
+| MiniF2F-Solving | Proof Search | InternLM2.5-StepProver | 55.91±0.41% | 39.20±0.46% | 29.51±0.81% |
+| MiniF2F-Solving | Proof Search | LeanSTaR | 50.93±0.46% | 34.31±1.08% | 25.16±1.20% |
+| MiniF2F-Solving | Whole-Proof | DeepSeekProver-V1.5 | 59.11±1.01% | 1.24±0.81% | 0.80±0.46% |
+| MiniF2F-Solving | Whole-Proof | Goedel-Prover | 63.02±0.41% | 0.36±0.15% | 0.36±0.15% |
+| MiniF2F-Solving | Whole-Proof | Kimina-Prover | 72.80±0.27% | 32.00±0.46% | 31.91±0.62% |
+| MiniF2F-Solving | Whole-Proof | DeepSeek-Prover-V2 non-CoT | 75.56±0.62% | 0.09±0.15% | 0.09±0.15% |
+| MiniF2F-Solving | Whole-Proof | DeepSeek-Prover-V2 CoT | 78.40±0.71% | 22.67±1.87% | 22.40±1.62% |
+| MiniF2F-Solving | Whole-Proof | STP | 61.33±0.46% | 2.31±1.08% | 1.96±1.11% |
+| MiniF2F-Solving | Whole-Proof | Goedel-Prover-V2-8B | 86.22±0.15% | 69.07±0.53% | 65.87±0.46% |
+| MiniF2F-Solving | Prompt | DeepSeek-V3.2 | 42.40% | 17.87% | 16.27% |
+| MiniF2F-Solving | Prompt | Sonnet-4.5 | 33.33% | 8.53% | 8.27% |
+| MiniF2F-Solving | DSP+ | DeepSeek-V3.2+BFS-Prover-V1-7B | 23.47% | 23.20% | 21.60% |
+| PutnamBench-Solving | Proof Search | InternLM2.5-StepProver | 1.54±0.00% | 27.06±1.98% | 0.00±0.00% |
+| PutnamBench-Solving | Proof Search | LeanSTaR | 0.82±0.18% | 27.88±1.70% | 0.31±0.00% |
+| PutnamBench-Solving | Whole-Proof | DeepSeekProver-V1.5 | 0.93±0.00% | 7.51±0.64% | 0.10±0.18% |
+| PutnamBench-Solving | Whole-Proof | Goedel-Prover | 0.62±0.00% | 9.57±0.82% | 0.00±0.00% |
+| PutnamBench-Solving | Whole-Proof | Kimina-Prover | 1.54±0.00% | 12.14±0.47% | 0.93±0.00% |
+| PutnamBench-Solving | Whole-Proof | DeepSeek-Prover-V2 non-CoT | 1.95±0.47% | 4.84±0.36% | 0.00±0.00% |
+| PutnamBench-Solving | Whole-Proof | DeepSeek-Prover-V2 CoT | 2.67±0.18% | 12.96±0.00% | 0.62±0.00% |
+| PutnamBench-Solving | Whole-Proof | STP | 0.62±0.00% | 10.19±0.62% | 0.00±0.00% |
+| PutnamBench-Solving | Whole-Proof | Goedel-Prover-V2-8B | 2.88±0.89% | 17.18±5.81% | 1.03±0.18% |
+| PutnamBench-Solving | Prompt | DeepSeek-V3.2 | 0.93% | 2.47% | 0.00% |
+| PutnamBench-Solving | Prompt | Sonnet-4.5 | 0.62% | 0.31% | 0.00% |
+| PutnamBench-Solving | DSP+ | DeepSeek-V3.2+BFS-Prover-V1-7B | 0.31% | 9.57% | 0.00% |
+
+### D-FPS
+
+| Benchmark | Method | Model | Typecheck | Solved |
+| --- | --- | --- | ---: | ---: |
+| FormalMath500 | Direct | DeepSeek-V3.2 | 30.49% | 29.46% |
+| FormalMath500 | Hybrid CoT | DeepSeek-V3.2 | 50.65% | 48.58% |
+| FormalMath500 | Direct | Sonnet-4.5 | 20.67% | 20.16% |
+| FormalMath500 | Hybrid CoT | Sonnet-4.5 | 24.03% | 23.26% |
+| MiniF2F-Solving | Direct | DeepSeek-V3.2 | 41.60% | 40.80% |
+| MiniF2F-Solving | Hybrid CoT | DeepSeek-V3.2 | 58.93% | 57.33% |
+| MiniF2F-Solving | Direct | Sonnet-4.5 | 28.53% | 28.00% |
+| MiniF2F-Solving | Hybrid CoT | Sonnet-4.5 | 29.33% | 28.53% |
+| PutnamBench-Solving | Direct | DeepSeek-V3.2 | 0.93% | 0.00% |
+| PutnamBench-Solving | Hybrid CoT | DeepSeek-V3.2 | 7.41% | 1.54% |
+| PutnamBench-Solving | Direct | Sonnet-4.5 | 0.31% | 0.00% |
+| PutnamBench-Solving | Hybrid CoT | Sonnet-4.5 | 0.00% | 0.00% |
+
+
+## Contributing
 This project is released under the Apache 2.0 license. Please see the [LICENSE](./LICENSE) file for more information.
 
 Feel free to discuss the paper/data/code with us through issues/emails!
 - Qi Liu: purewhite@sjtu.edu.cn
 
-## 📖 Citation
+## Citation
 
-If you find our work helps, please consider starring ⭐ us and citing:
+If you find our work helpful, please consider starring this repository and citing:
 
-```{bibtex}
-@misc{liu2025theoremprovingformulationframework,
-      title={Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving}, 
-      author={Qi Liu and Xinhao Zheng and Renqiu Xia and Xingzhi Qi and Qinxiang Cao and Junchi Yan},
-      year={2025},
-      eprint={2505.04528},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2505.04528}, 
+```bibtex
+@inproceedings{
+liu2026beyond,
+title={Beyond Theorem Proving: Formulation, Framework and Benchmark for Formal Problem-Solving},
+author={Qi Liu and Xinhao Zheng and Renqiu Xia and Xingzhi Qi and Qinxiang Cao and Junchi Yan},
+booktitle={Forty-third International Conference on Machine Learning},
+year={2026},
+url={https://openreview.net/forum?id=hgMZraPlSv}
 }
 ```
-
-## References
-[1] Moura, Leonardo de, and Sebastian Ullrich. "The Lean 4 theorem prover and programming language." Automated Deduction–CADE 28: 28th International Conference on Automated Deduction, Virtual Event, July 12–15, 2021, Proceedings 28. Springer International Publishing, 2021.
-
-[2] Community, Mathlib . "The Lean mathematical library.", 10.1145/3372885.3373824. 2019.
-
-[3] Limperg, Jannis, and Asta Halkjær From. "Aesop: White-box best-first proof search for Lean." Proceedings of the 12th ACM SIGPLAN International Conference on Certified Programs and Proofs. 2023.
-
-[4] Aniva, Leni, et al. "Pantograph: A Machine-to-Machine Interaction Interface for Advanced Theorem Proving, High Level Reasoning, and Data Extraction in Lean 4." arXiv preprint arXiv:2410.16429 (2024).
-
-[5] Lightman, Hunter, et al. "Let's verify step by step." The Twelfth International Conference on Learning Representations. 2023.
-
-[6] Hendrycks, Dan, et al. "Measuring mathematical problem solving with the math dataset." arXiv preprint arXiv:2103.03874 (2021).
-
-[7] Zheng, Kunhao, Jesse Michael Han, and Stanislas Polu. "Minif2f: a cross-system benchmark for formal olympiad-level mathematics." arXiv preprint arXiv:2109.00110 (2021).
-
-[8] Tsoukalas, George, et al. "Putnambench: Evaluating neural theorem-provers on the putnam mathematical competition." arXiv preprint arXiv:2407.11214 (2024).

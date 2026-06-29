@@ -1,0 +1,22 @@
+name = "FormalProblemSolving"
+version = "0.1.0"
+defaultTargets = ["FormalProblemSolving"]
+
+[package.leanOptions]
+autoImplicit = false
+relaxedAutoImplicit = false
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4"
+rev = "v4.15.0"
+
+[[require]]
+name = "aesop"
+git = "https://github.com/leanprover-community/aesop"
+rev = "v4.15.0"
+
+[[lean_lib]]
+name = "FormalProblemSolving"
+roots = ["FormalProblemSolving"]
+globs = ["FormalProblemSolving.+"]

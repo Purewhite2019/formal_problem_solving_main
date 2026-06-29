@@ -1,62 +1,76 @@
 import os
-import os.path as osp
-import time
-import errno
-from pathlib import Path
-import regex as re
-from typing import Union, Tuple, List, Dict, Any, Optional, Generator, AsyncGenerator, Set, Iterable
-from contextlib import contextmanager, asynccontextmanager
 import asyncio
-import collections as C
-import itertools as I
 import functools as F
-import inspect
 import signal
 
-import ipdb
-import aiofiles
-from loguru import logger
+import regex as re
+from typing import Dict, Tuple, Iterable
 import pexpect
 
-from common.constants import Expr, _SPACES_REGEX, CODEBLOCK_PATTERN, FPS_GLOBAL_SETTING
+from common.constants import Expr, _SPACES_REGEX, FPS_GLOBAL_SETTING, CODEBLOCK_PATTERN
 
 
-replace_calc = lambda s: re.sub(r'by\s+calc', r'calc', s)
-replace_sorry = lambda s: re.sub(r'by\s+sorry', r'sorry', s)
+def format_variable_sequence(s : Iterable['Variable']) -> str:
+    return ' '.join([f'({v.name} : {v.t})' if v.name not in [None, '_'] else f'[{v.t}]' for v in s])
+
+def strip_code(output: str) -> str:
+    try:
+        code = re.findall(CODEBLOCK_PATTERN, output)[-1]
+    except IndexError:
+        code = output[: output.find("```")] if "```" in output else output
+
+    lines = code.splitlines()
+    min_spaces = min((len(line) - len(line.lstrip(" ")) for line in lines if line.strip()), default=0)
+    return "\n".join(line[min_spaces:] for line in lines).strip()
+
+def clean_proof(output: str) -> str:
+    return remove_comments(strip_code(output))
+
+def remove_comments(code: str) -> str:
+    code = re.sub(r'/-(.|\n)*?-/', '', code)
+    code = re.sub(r'--.*', '', code)
+    return code
+
+def normalize_spaces(s: str) -> str:
+    """Repalce any consecutive block of whitespace characters in ``s`` with a single whitespace."""
+    return _SPACES_REGEX.sub(" ", s).strip()
+
+def normalize_draft(s: str) -> str:
+    s_normalized = re.sub(
+        r':=\s*sorry', r':= sorry',
+            re.sub(
+        r':=\s*by\s+sorry', r':= sorry',
+        remove_comments(s)
+    )).strip()
+    s_filled = re.sub(r'have\s+:', r'have this :', s_normalized)
+    return '\n'.join(l for l in s_filled.splitlines() if l.strip() != '')
+
+def parse_expr(payload: Dict) -> Expr:
+    """
+    :meta private:
+    """
+    return payload["pp"]
+
+def replace_span(span: Tuple[int, int], replacement: str, input_string: str) -> str:
+    start, end = span
+    return input_string[:start] + replacement + input_string[end:]
 
 def zip_strict(*args):
     assert len(args) > 1 and all(len(args[0]) == len(a) for a in args[1:])
     return zip(*args)
 
-def format_variable_sequence(s : Iterable['Variable']) -> str:
-    return ' '.join([f'({v.name} : {v.t})' if v.name not in [None, '_'] else f'[{v.t}]' for v in s])
+def chunk_list(data: list, chunksize: int):
+    for i in range(0, len(data), chunksize):
+        yield (i, data[i:i + chunksize])
 
-def inplace_add(s: str, ss: List[str]) -> str:
-    ss.append(s)
-    return s
-
-def extract_code(s: str) -> str:
-    parse_result = re.findall(CODEBLOCK_PATTERN, s)
-    if len(parse_result) > 0:
-        step = parse_result[0].strip()
-    else:
-        split_cnt = len(re.findall('```', s))
-        if split_cnt == 0:
-            step = s.strip()
-        if split_cnt == 1:
-            step = s[:s.find('```')].strip()
-        else:
-            step = s
-
-    return step
-
-def to_sync(func):
+def to_sync(func, force: bool=False):
     @F.wraps(func)
     def wrapper(*args, **kwargs):
-        if not FPS_GLOBAL_SETTING['TO_SYNC_ENABLED']:
+        if not force and not FPS_GLOBAL_SETTING['TO_SYNC_ENABLED']:
             raise RuntimeError('to_sync() is not enabled in common.constants.FPS_GLOBAL_SETTING')
-        return asyncio.get_event_loop().run_until_complete(func(*args, **kwargs))
+        return asyncio.run(func(*args, **kwargs))
     return wrapper
+
 
 class Spawn(pexpect.spawn):
     def __init__(self, *args, **kwargs):
@@ -65,7 +79,6 @@ class Spawn(pexpect.spawn):
         self.delayafterterminate = 0.5
         self.ptyproc.delayafterclose = 0.5
         self.ptyproc.delayafterterminate = 0.5
-        # self.delaybeforesend = None
 
     async def send_async(self, s):
         if self.delaybeforesend is not None:
@@ -76,16 +89,7 @@ class Spawn(pexpect.spawn):
 
         b = self._encoder.encode(s, final=False)
 
-        return os.write(self.child_fd, b)        
-        # while b:
-        #     try:
-        #         bytes_written = os.write(self.child_fd, b)
-        #         b = b[bytes_written:]
-        #     except BlockingIOError:
-        #         await asyncio.sleep(0)
-        #         pass
-        
-        # return bytes_written  
+        return os.write(self.child_fd, b)
 
     async def sendline_async(self, s=''):
         '''Wraps send(), sending string ``s`` to child process, with
@@ -185,50 +189,3 @@ class Spawn(pexpect.spawn):
                 return True
             else:
                 return False
-
-
-def unique(r : List) -> List:
-    s = []
-    for i in r:
-        if i not in s:
-            s.append(i)
-    return s
-
-def parse_expr(payload: Dict) -> Expr:
-    """
-    :meta private:
-    """
-    return payload["pp"]
-
-def normalize_spaces(s: str) -> str:
-    """Repalce any consecutive block of whitespace characters in ``s`` with a single whitespace."""
-    return _SPACES_REGEX.sub(" ", s).strip()
-
-def remove_comments(code):
-    code = re.sub(r'/-(.|\n)*?-/', '', code)
-    code = re.sub(r'--.*', '', code)
-    return code
-
-def pdb_on_assertion_error(func):
-    @F.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            return func(*args, **kwargs)
-        except AssertionError as e:
-            ipdb.set_trace()
-            raise e
-    return wrapper
-
-def remove_min_whitespace(s: str) -> str:
-    lines = s.splitlines()
-    non_empty_lines = [line for line in lines if line.strip()]
-    if not non_empty_lines:
-        return s
-    min_whitespace = min(len(line) - len(line.lstrip()) for line in non_empty_lines)
-    result = []
-    for line in lines:
-        if line.strip():
-            result.append(line[min_whitespace:])
-        else:
-            result.append(line)
-    return '\n'.join(result)

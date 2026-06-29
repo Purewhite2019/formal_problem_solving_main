@@ -1,13 +1,11 @@
+from typing import Optional, List, Tuple
 
-import collections as C
-import functools as F
-import itertools as I
-from typing import Optional, Union, List, Dict, Tuple, Set, Iterable
-
-from common.constants import CORE_OPTIONS, OPEN_HEADER, RPE_TACTICS, H_SUBMISSION_NAME
-from common.utils import format_variable_sequence, inplace_add, to_sync
-from common.pantograph.server import Server, TacticFailure
-from common.pantograph.dataclasses import GoalState, FormalProblem, FormalProblem
+from common.constants import CORE_OPTIONS, OPEN_HEADER, RPE_TACTICS, H_SUBMISSION_NAME, H_CONCLUSION_NAME
+from common.utils import (
+    format_variable_sequence,
+    to_sync)
+from common.pantograph.server import Server
+from common.pantograph.dataclasses import GoalState, FormalProblem
 
 
 class BaseSolvingServer:
@@ -27,33 +25,46 @@ class BaseSolvingServer:
         self.timeout = timeout
         self.tag = tag
 
-    async def load_problem_async(self, sample: Optional[FormalProblem]) -> None:
-        if sample is None:
-            return None
-        assert isinstance(sample, FormalProblem)
-        self.sample = sample
-        self.server = await Server.create(
-            imports=self.imports,
-            project_path=self.project_path,
-            core_options=CORE_OPTIONS,
-            timeout=300,
-        )
-        return None
-
     async def init_backward_state_async(self, sample: Optional[FormalProblem]=None) -> GoalState:
         await self.load_problem_async(sample)
+
+        self.answer_mvarId = None
         
-        self.formal_problem_framework = 'example : ∀ ' + \
-            ((format_variable_sequence(self.sample.intros) + ' ') if len(self.sample.intros) > 0 else '') + \
-            f'(answer : {self.sample.formal_answer_type}) ({H_SUBMISSION_NAME}: {self.sample.formal_answer}) ' + \
-            ((format_variable_sequence(self.sample.outros[:-1]) + ' ') if len(self.sample.outros) > 1 else '') + \
-            f', ({self.sample.outros[-1].t})\n:= sorry\n'
+        
+        V = [f"  ({v.name or '_'} : {v.t})" for v in sample.independent_variables]
+        Phi = [f"  ({v.name or '_'} : {v.t})" for v in sample.hypotheses]
+        Psi = sample.conclusions
+
+        self.formal_problem_framework = 'example\n' + \
+            '\n'.join(
+                V + \
+                [f'  (answer : {self.sample.formal_answer_type})', f'  ({H_SUBMISSION_NAME}: {self.sample.formal_answer})'] + \
+                Phi
+            ) + \
+            '\n: ' + ' ∧ '.join(Psi) + '\n:= by\n' + \
+            'all_goals sorry'
 
         units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER)+'\n'+self.formal_problem_framework)
         assert len(units) >= 1 and 'error' not in str([x.messages for x in units]), f'formal_problem_framework:{(self.sample.header or OPEN_HEADER)}\n{self.formal_problem_framework}'
         return units[-1].goal_state
             
     init_backward_state = to_sync(init_backward_state_async)
+
+    async def load_problem_async(self, sample: Optional[FormalProblem]) -> None:
+        if sample is None:
+            return None
+        
+        assert isinstance(sample, FormalProblem)
+        self.sample = sample
+        self.server = await Server.create(
+            imports=self.imports,
+            project_path=self.project_path,
+            core_options=CORE_OPTIONS,
+            timeout=self.timeout,
+        )
+        return None
+    
+    load_problem = to_sync(load_problem_async)
 
     async def get_submission_async(self, state: GoalState) -> Optional[str]:
         assert self.answer_mvarId is not None
@@ -67,124 +78,157 @@ class BaseSolvingServer:
 class TermSolvingServer(BaseSolvingServer):
     async def init_solving_state_async(self, sample: Optional[FormalProblem]=None) -> Tuple[GoalState, List[str]]:
         await self.load_problem_async(sample)
-        tac_history = []
         
         self.answer_mvarId = None
-        self.formal_problem_framework = 'example :' + \
-            ((' ∀ ' + format_variable_sequence(self.sample.intros) + ',\n') if len(self.sample.intros) > 0 else '\n') + \
+        V = [f"  ({v.name or '_'} : {v.t})" for v in sample.independent_variables]
+        Phi = [f"  ({v.name or '_'} : {v.t})" for v in sample.hypotheses]
+        Psi = sample.conclusions
+
+        init_steps = ([
+            'intros ' + ' '.join([v.name or '_' for v in self.sample.independent_variables])
+                ] if len(self.sample.independent_variables) > 0 else []) + [
+            'apply Exists.intro ?Answer ?Proof',
+            'rotate_left',
+        ] + ([
+            'intros ' + ' '.join([v.name or '_' for v in sample.hypotheses])
+                ] if len(Phi) > 0 else [])
+
+        self.formal_problem_framework = 'example :\n' + \
+            (('∀ ' + '\n  '.join(V) + ',\n') if len(V) > 0 else '\n') + \
             f'∃ (answer : {self.sample.formal_answer_type}),' + \
-            (('\n∀ ' + format_variable_sequence(self.sample.outros[:-1]) + ',\n') if len(self.sample.outros) > 1 else '\n') + \
-            f'({self.sample.outros[-1].t})\n:= sorry\n'
-
+            (('\n∀ ' + '\n  '.join(Phi) + ',\n') if len(Phi) > 0 else '\n') + \
+            ' ∧ '.join(Psi) + '\n:= by\n' + \
+            '\n'.join(init_steps) + \
+            '\nall_goals sorry'
+    
         units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER)+'\n'+self.formal_problem_framework)
-        assert len(units) >= 1 and 'error' not in str([x.messages for x in units]), f'formal_problem_framework:\n{(self.sample.header or OPEN_HEADER)}\n{self.formal_problem_framework}'
+        assert len(units) >= 1 and 'error' not in str([x.messages for x in units]), f'formal_problem_framework:{(self.sample.header or OPEN_HEADER)}\n{self.formal_problem_framework}'
         init_solution_state = units[-1].goal_state
-        
-        if len(self.sample.intros) > 0:
-            init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, inplace_add('intros ' + ' '.join([v.name or '_' for v in self.sample.intros]), tac_history))
-        init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, inplace_add('apply Exists.intro', tac_history))
-        
+        assert len(init_solution_state.goals) == 2 and [g.name for g in init_solution_state.goals] == ['Proof', 'Answer'], f'Invalid solving_state:\n{init_solution_state}'
         rs = await self.server.goal_print_async(init_solution_state, False, False, True)
-        answer_mvarId = [g['name'] for g in rs['goals'] if g['userName'] == 'w']
-        assert len(answer_mvarId) == 1
+        answer_mvarId = [g['name'] for g in rs['goals'] if g['userName'] == 'Answer']
+        assert len(answer_mvarId) == 1, f'Invalid answer_mvarId in init_solution_state: {[init_solution_state]}'
         self.answer_mvarId = answer_mvarId[0]
-        
-        if len(self.sample.outros) > 1:
-            init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, inplace_add('intros ' + ' '.join([v.name or '_' for v in self.sample.outros[:-1]]), tac_history))
-        
-        assert len(init_solution_state.goals) == 2 and [g.name for g in init_solution_state.goals] == ['h', 'w'], f'Invalid solving_state:\n{init_solution_state}'
 
-        return init_solution_state, tac_history
+        return init_solution_state, init_steps
             
     init_solving_state = to_sync(init_solving_state_async)
 
-    async def check_rpe_async(self, submission: str) -> Optional[str]:
+    async def prove_eq_async(self, submission: str) -> Optional[str]:
         await self.server.restart_async()
+        rpe_proof = '''  try ext
+  try funext
+  repeat''' + ' {\n' + '\n'.join(('    try ' + tac + ';') for tac in RPE_TACTICS) + '\n  }'
         rpe_code = 'example' + \
-            ((' ' + format_variable_sequence(self.sample.intros) + '\n') if len(self.sample.intros) > 0 else '\n') + \
-            f' (answer : {self.sample.formal_answer_type}) : (answer = (\n{submission} : {self.sample.formal_answer_type}\n)) ↔ (\n{self.sample.formal_answer}\n)' + ' := by\n' + '\n'.join(['try ' + tac for tac in RPE_TACTICS])
-
+            ((' ' + format_variable_sequence(self.sample.independent_variables) + '\n') if len(self.sample.independent_variables) > 0 else '\n') + \
+            f' (answer : {self.sample.formal_answer_type}) : (answer = (\n{submission} : {self.sample.formal_answer_type}\n)) ↔ (\n{self.sample.formal_answer}\n)' + ' := by\n' + rpe_proof
+        
         try:
-            units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER) + '\n' + rpe_code)
-            assert len(units) >= 1, f'len(units)={len(units)}'
-            assert 'error' not in str([x.messages for x in units]), str([x.messages for x in units])
-            assert units[-1].goal_state is None or units[-1].goal_state.is_solved, 'Unsolved units[-1].goal_state:\n' + str(units[-1].goal_state)
-            return RPE_TACTICS
+            units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER)+'\n'+rpe_code)
+            assert 'error' not in str([x.messages for x in units]) and all((u.goal_state is None or u.goal_state.is_solved) for u in units), f'formal_problem_framework:\n{(self.sample.header or OPEN_HEADER)}\n{rpe_code}\nmessage:\n{str([x.messages for x in units])}'
+            return rpe_proof
         except:
             return None
 
-    check_rpe = to_sync(check_rpe_async)
+    prove_eq = to_sync(prove_eq_async)
 
 
 # Answer as Prop
 class PropSolvingServer(BaseSolvingServer):
-    async def init_solving_state_async(self, sample: Optional[FormalProblem]=None) -> GoalState:
+    async def init_solving_state_async(self, sample: Optional[FormalProblem]=None) -> Tuple[GoalState, List[str]]:
         await self.load_problem_async(sample)
         
         self.answer_mvarId = None
-        self.formal_problem_framework = 'example :' + \
-            ((' ∀ ' + format_variable_sequence(self.sample.intros) + ',\n') if len(self.sample.intros) > 0 else '\n') + \
-            f'∀ (answer : {self.sample.formal_answer_type}), ∃ ({H_SUBMISSION_NAME} : Prop), ' + \
-            (('\n∀ ' + format_variable_sequence(self.sample.outros[:-1]) + ',\n') if len(self.sample.outros) > 1 else '\n') + \
-            f'(({self.sample.outros[-1].t}) ↔ {H_SUBMISSION_NAME})\n:= sorry'
-        
+        V = [f"  ({v.name or '_'} : {v.t})" for v in sample.independent_variables]
+        Phi = [f"  ({v.name or '_'} : {v.t})" for v in sample.hypotheses]
+        Psi = sample.conclusions
+
+        # From FPS to D-FPS
+        V.append(f'   (answer : {self.sample.formal_answer_type})')
+        Psi = '(' + ' ∧ '.join(Psi) + f' ↔ {H_SUBMISSION_NAME})'
+
+        init_steps = [
+            'intros ' + ' '.join([v.name or '_' for v in self.sample.independent_variables] + ['answer']),
+            'apply Exists.intro ?Answer ?Proof',
+            'rotate_left'
+        ] + \
+            (['intros ' + ' '.join([v.name or '_' for v in sample.hypotheses])] if len(Phi) > 0 else []) + \
+        [
+            'refine @Iff.intro ?_ _ ?Forward ?Backward',
+            'rotate_left',
+            f'intros {H_SUBMISSION_NAME}',
+            'rotate_right',
+            f'intros {H_CONCLUSION_NAME}'
+        ]
+
+        self.formal_problem_framework = 'example :\n' + \
+            (('∀ ' + '\n  '.join(V) + ',\n') if len(V) > 0 else '\n') + \
+            f'∃ ({H_SUBMISSION_NAME} : Prop),' + \
+            (('\n∀ ' + '\n  '.join(Phi) + ',\n') if len(Phi) > 0 else '\n') + \
+            Psi + '\n:= by\n' + \
+            '\n'.join(init_steps) + \
+            '\nall_goals sorry'
+    
         units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER)+'\n'+self.formal_problem_framework)
         assert len(units) >= 1 and 'error' not in str([x.messages for x in units]), f'formal_problem_framework:{(self.sample.header or OPEN_HEADER)}\n{self.formal_problem_framework}'
         init_solution_state = units[-1].goal_state
-        
-        if len(self.sample.intros) > 0:
-            init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, 'intros ' + ' '.join([v.name or '_' for v in self.sample.intros]))
-        init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, 'intros answer')
-        init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, 'apply Exists.intro')
-        
+        assert len(init_solution_state.goals) == 3 and [g.name for g in init_solution_state.goals] == ['Forward', 'Backward', 'Answer'], f'Invalid solving_state:\n{init_solution_state}'
         rs = await self.server.goal_print_async(init_solution_state, False, False, True)
-        answer_mvarId = [g['name'] for g in rs['goals'] if g['userName'] == 'w']
-        assert len(answer_mvarId) == 1
+        answer_mvarId = [g['name'] for g in rs['goals'] if g['userName'] == 'Answer']
+        assert len(answer_mvarId) == 1, f'Invalid answer_mvarId in init_solution_state: {[init_solution_state]}'
         self.answer_mvarId = answer_mvarId[0]
-        
-        if len(self.sample.outros) > 1:
-            init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, 'intros ' + ' '.join([v.name or '_' for v in self.sample.outros[:-1]]))
-        init_solution_state = await self.server.goal_tactic_async(init_solution_state, 0, 'constructor')
-        init_solution_state = await self.server.goal_tactic_async(init_solution_state, 1, f'intros {H_SUBMISSION_NAME}')
-        init_solution_state = await self.server.goal_tactic_async(init_solution_state, 1, 'intros ' + self.sample.outros[-1].name)
-        
-        assert len(init_solution_state.goals) == 3 and [g.name for g in init_solution_state.goals] == ['h.mp', 'h.mpr', 'w'], f'Invalid solving_state:\n{init_solution_state}'
-    
-        return init_solution_state
+
+        return init_solution_state, init_steps
         
     init_solving_state = to_sync(init_solving_state_async)
 
-    async def init_forward_reasoning_state_async(self, sample: Optional[FormalProblem]=None) -> GoalState:
+    async def init_forward_solving_state_async(self, sample: Optional[FormalProblem]=None) -> GoalState:
         await self.load_problem_async(sample)
         
-        self.formal_problem_framework = 'example ' + \
-            ((format_variable_sequence(self.sample.intros) + '\n') if len(self.sample.intros) > 0 else '\n') + \
-            f'(answer : {self.sample.formal_answer_type}) ' + \
-            (('\n' + format_variable_sequence(self.sample.outros[:]) + '\n') if len(self.sample.outros) > 0 else '\n') + \
-            f': False := sorry'
+        self.answer_mvarId = None
+        init_steps = [
+            'intros ' + ' '.join([v.name or '_' for v in self.sample.independent_variables] + ['answer']),
+            'apply Exists.intro ?Answer ?Proof',
+            'rotate_left',
+        ] + ([
+            'intros ' + ' '.join([v.name or '_' for v in sample.hypotheses])
+        ] if len(sample.hypotheses) > 0 else [])
+        
+        self.formal_problem_framework = 'example :\n' + \
+            (('∀ ' + format_variable_sequence(self.sample.independent_variables) + ',\n') if len(self.sample.independent_variables) > 0 else '') + \
+            f'∀ (answer : {self.sample.formal_answer_type}), ∃ ({H_SUBMISSION_NAME} : Prop), \n' + \
+            (('∀ ' + format_variable_sequence(self.sample.hypotheses) + ',\n') if len(self.sample.hypotheses) > 0 else '') + \
+            f'({H_SUBMISSION_NAME})' + '\n:= by\n' + \
+            '\n'.join(init_steps) + \
+            '\nall_goals sorry'
         
         units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER)+'\n'+self.formal_problem_framework)
         assert len(units) >= 1 and 'error' not in str([x.messages for x in units]), f'formal_problem_framework:{(self.sample.header or OPEN_HEADER)}\n{self.formal_problem_framework}'
         init_solution_state = units[-1].goal_state
-        assert len(init_solution_state.goals) == 1 and [g.name for g in init_solution_state.goals] == [None], f'Invalid solving_state:\n{init_solution_state}'
+        assert [g.name for g in init_solution_state.goals] == ['Proof', 'Answer'], f'Invalid solving_state:\n{init_solution_state}'
+        rs = await self.server.goal_print_async(init_solution_state, False, False, True)
+        answer_mvarId = [g['name'] for g in rs['goals'] if g['userName'] == 'Answer']
+        assert len(answer_mvarId) == 1, f'Invalid answer_mvarId in init_solution_state: {[init_solution_state]}'
+        self.answer_mvarId = answer_mvarId[0]
         
-        return init_solution_state
+        return init_solution_state, init_steps
         
-    init_forward_reasoning_state = to_sync(init_forward_reasoning_state_async)
+    init_forward_solving_state = to_sync(init_forward_solving_state_async)
 
-    async def check_rpe_async(self, submission: str) -> Optional[str]:
+    async def prove_eq_async(self, submission: str) -> Optional[str]:
         await self.server.restart_async()
+        rpe_proof = '''  try ext
+  try funext
+  repeat''' + ' {\n' + '\n'.join(('    try ' + tac + ';') for tac in RPE_TACTICS) + '\n  }'
         rpe_code = 'example' + \
-            ((' ' + format_variable_sequence(self.sample.intros) + '\n') if len(self.sample.intros) > 0 else '\n') + \
-            f' (answer : {self.sample.formal_answer_type}) : (\n{submission}\n) ↔ (\n{self.sample.formal_answer}\n)' + ' := by\n' + '\n'.join(['try ' + tac for tac in RPE_TACTICS])
-
+            ((' ' + format_variable_sequence(self.sample.independent_variables) + '\n') if len(self.sample.independent_variables) > 0 else '\n') + \
+            f' (answer : {self.sample.formal_answer_type}) : (\n{submission}\n) ↔ (\n{self.sample.formal_answer}\n)' + ' := by\n' + rpe_proof
+        
         try:
-            units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER) + '\n' + rpe_code)
-            assert len(units) >= 1, f'len(units)={len(units)}'
-            assert 'error' not in str([x.messages for x in units]), str([x.messages for x in units])
-            assert units[-1].goal_state is None or units[-1].goal_state.is_solved, 'Unsolved units[-1].goal_state:\n' + str(units[-1].goal_state)
-            return RPE_TACTICS
+            units = await self.server.load_sorry_async((self.sample.header or OPEN_HEADER)+'\n'+rpe_code)
+            assert 'error' not in str([x.messages for x in units]) and all((u.goal_state is None or u.goal_state.is_solved) for u in units), f'formal_problem_framework:\n{(self.sample.header or OPEN_HEADER)}\n{rpe_code}\nmessage:\n{str([x.messages for x in units])}'
+            return rpe_proof
         except:
             return None
 
-    check_rpe = to_sync(check_rpe_async)
+    prove_eq = to_sync(prove_eq_async)
